@@ -1,0 +1,21 @@
+== 0. Normal traffic for 30 s
+simulated: 56 cancelled order, 71 new customer, 157 new order, 88 price change, 202 status change
+== 1. Consumer crashes after writing a batch but before committing its Kafka offsets
+2026-10-20 19:17:55,588 WARNING simulated crash after the DB commit, before committing offsets
+simulated: 19 cancelled order, 26 new customer, 59 new order, 21 price change, 65 status change
+2026-10-20 19:18:05,712 INFO skipped 23 changes that were already applied (redelivered after a restart)
+== 2. Consumer is down for 20 s while orders keep coming in
+simulated: 41 cancelled order, 38 new customer, 106 new order, 54 price change, 142 status change
+== 3. Debezium (Kafka Connect) restarts mid-traffic
+simulated: 54 cancelled order, 48 new customer, 123 new order, 77 price change, 181 status change
+connector running
+== 4. Schema change on the source: a new column
+simulated: 17 cancelled order, 22 new customer, 61 new order, 32 price change, 61 status change
+== Verify
+table      source rows replica rows  source hash       replica hash      match
+customers          405          405  f7cbbed85a8a487b  f7cbbed85a8a487b  yes
+products            50           50  64f4530a3f55e635  64f4530a3f55e635  yes
+orders             320          320  885267fbf2c595fa  885267fbf2c595fa  yes
+
+history: 2576 changes recorded (2326 live, 250 from the initial snapshot); 186 deletes kept as history
+lag source commit -> replica: p50 3.16s, p95 22.65s (includes any time the consumer was stopped)
